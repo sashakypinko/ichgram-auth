@@ -7,7 +7,8 @@ RUN npm i
 
 COPY . .
 
+RUN npm run build
+
 EXPOSE 3002
 
-CMD ["npm", "run", "build"]
 CMD ["npm", "run", "prod"]
