@@ -3,11 +3,12 @@ import {Auth} from './auth.schema';
 import {RegisterDto} from './dto/register.dto';
 import {LoginDto} from './dto/login.dto';
 import {AuthResponseDto} from './dto/auth-response.dto';
-import { Inject, Injectable, UnauthorizedException, ValidationException } from 'light-kite';
+import { Inject, Injectable, UnauthorizedException } from 'light-kite';
 import CoreService from '../core/services/core.service';
 import {IUser} from '../core/models/user.model';
 import JWTService from '../core/services/jwt.service';
 import TYPES from '../types';
+import ValidationException from 'light-kite/dist/exceptions/validation.exception';
 
 @Injectable()
 class AuthService {

@@ -2,9 +2,11 @@
   "name": "auth-service",
   "version": "1.0.0",
   "description": "Auth service for ichgram",
-  "main": "app.ts",
+  "main": "./src/app.ts",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "nodemon",
+    "prod": "nodemon ./dist/app.js",
+    "build": "npx tsc"
   },
   "dependencies": {
     "light-kite": "^1.0.2",
