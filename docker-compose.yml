@@ -4,6 +4,15 @@ services:
   auth:
     build:
       context: .
+    environment:
+      PORT: 3000
+      DB_URI: ${DB_URI}
+      DB_NANE: ${DB_NANE}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      CORE_SERVICE_URL: ${CORE_SERVICE_URL}
+    env_file:
+      - .env
     expose:
       - "3002"
     networks:
