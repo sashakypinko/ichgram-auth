@@ -1,21 +1,25 @@
 import * as bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import {Auth} from './auth.schema';
 import {RegisterDto} from './dto/register.dto';
 import {LoginDto} from './dto/login.dto';
 import {AuthResponseDto} from './dto/auth-response.dto';
-import { Inject, Injectable, UnauthorizedException } from 'light-kite';
+import {Inject, Injectable, InternalServerErrorException, UnauthorizedException} from 'light-kite';
 import CoreService from '../core/services/core.service';
 import {IUser} from '../core/models/user.model';
 import JWTService from '../core/services/jwt.service';
 import TYPES from '../types';
 import ValidationException from 'light-kite/dist/exceptions/validation.exception';
+import EmailService from '../core/services/email.service';
 
 @Injectable()
 class AuthService {
   constructor(
     @Inject(TYPES.CoreService) private readonly coreService: CoreService,
-    @Inject(TYPES.JWTService) private readonly jwtService: JWTService
-  ) {}
+    @Inject(TYPES.JWTService) private readonly jwtService: JWTService,
+    @Inject(TYPES.EmailService) private readonly emailService: EmailService,
+  ) {
+  }
 
   async register(data: RegisterDto, device: string): Promise<AuthResponseDto> {
     const existingUser: IUser | null = await this.coreService.getUserByUniqueFields({
@@ -48,7 +52,7 @@ class AuthService {
   }
 
   async login({username, password}: LoginDto, device: string): Promise<AuthResponseDto> {
-    const user: IUser | null = await this.coreService.getUserByUniqueFields({ username, email: username });
+    const user: IUser | null = await this.coreService.getUserByUniqueFields({username, email: username});
     if (!user) throw new ValidationException({username: 'Invalid credentials'});
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -87,6 +91,37 @@ class AuthService {
 
   async getUser(userId: string): Promise<IUser | null> {
     return this.coreService.getUserById(userId);
+  }
+
+  async sendResetPasswordLink(username: string): Promise<string> {
+    const user: IUser | null = await this.coreService.getUserByUniqueFields({ username, email: username });
+    if (!user) throw new ValidationException({username: 'This user does not exist.'});
+    
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    await this.coreService.updateResetPasswordToken(user._id, resetToken);
+    
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const html = this.emailService.getEmailTemplate('reset-password', { resetUrl });
+    
+    if (!html) {
+      throw new InternalServerErrorException('Email template not found: reset-password.')
+    }
+    
+    await this.emailService.sendEmail(
+      user.email,
+      'Password Reset Request',
+      html
+    );
+    return 'Reset code has been sent successfully.';
+  }
+
+  async resetPassword(token: string, password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(10);
+    
+    const user = await this.coreService.resetPassword(token, await bcrypt.hash(password, salt));
+    await this.coreService.updateResetPasswordToken(user._id, null);
+    
+    return 'Password has been reset successfully.';
   }
 
   private async authorize(user: IUser, device: string): Promise<AuthResponseDto> {

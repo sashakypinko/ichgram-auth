@@ -1,14 +1,8 @@
-import {IsEmail, Length, IsNotEmpty, Matches} from 'class-validator';
+import {IsNotEmpty, Length, Matches} from 'class-validator';
 
-export class RegisterDto {
-  @IsEmail({}, {message: 'Invalid email format'})
-  email: string;
-  
-  @IsNotEmpty({message: 'Full Name is required'})
-  fullName: string;
-  
-  @IsNotEmpty({message: 'Username is required'})
-  username: string;
+export class ResetPasswordDto {
+  @IsNotEmpty({message: 'Token is required'})
+  token: string;
 
   @IsNotEmpty({message: 'Password is required'})
   @Length(8, undefined, { message: 'Password must be at least 8 characters' })
