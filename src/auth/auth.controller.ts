@@ -4,8 +4,10 @@ import {RegisterDto} from './dto/register.dto';
 import {LoginDto} from './dto/login.dto';
 import {AuthResponseDto} from './dto/auth-response.dto';
 import {IUser} from '../core/models/user.model';
+import {SendResetPasswordLinkDto} from './dto/send-reset-password-link.dto';
 import {RefreshTokensDto} from './dto/refresh-tokens.dto';
 import TYPES from '../types';
+import {ResetPasswordDto} from './dto/reset-password.dto';
 
 @Controller()
 class AuthController {
@@ -41,6 +43,18 @@ class AuthController {
   @Get('get-user')
   async getUser(@UserId() userId: string): Promise<IUser | null> {
     return this.authService.getUser(userId);
+  }
+
+  @Post('send-reset-password-link')
+  @ValidateDto(SendResetPasswordLinkDto)
+  async sendResetPasswordLink(@Body() { username }: SendResetPasswordLinkDto): Promise<string> {
+    return this.authService.sendResetPasswordLink(username);
+  }
+
+  @Post('reset-password')
+  @ValidateDto(ResetPasswordDto)
+  async resetPassword(@Body() { token, password }: ResetPasswordDto): Promise<string> {
+    return this.authService.resetPassword(token, password);
   }
 }
 
